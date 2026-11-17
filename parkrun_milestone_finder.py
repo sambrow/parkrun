@@ -100,27 +100,6 @@ def http_get(url: str, headers: dict):
         return HttpResponse(status_code, text)
 
 
-def get_nth_upcoming_saturday(gap: int) -> str:
-    if gap < 1:
-        raise ValueError("gap must be at least 1")
-
-    today = datetime.date.today()
-    weekday = today.weekday()  # Monday is 0, Saturday is 5
-
-    # If today is Saturday, it doesn't count, so the first upcoming Saturday is 7 days away.
-    # Otherwise, calculate days until the next Saturday using modulo arithmetic.
-    if weekday == 5:
-        days_to_first = 7
-    else:
-        days_to_first = (5 - weekday) % 7
-
-    # Add 7 days for each additional gap beyond the first
-    total_days = days_to_first + 7 * (gap - 1)
-    target_date = today + datetime.timedelta(days=total_days)
-
-    return target_date.strftime("%Y-%m-%d")
-
-
 def get_latest_event_info():
     # This page redirects to a page that contains the latest event number.
     url = f"https://www.parkrun.us/{VENUE_NAME}/results/latestresults/"
@@ -280,7 +259,7 @@ def collect_milestone(
                 if gap == 1:
                     projected_date = "NEXT"
                 else:
-                    projected_date = get_nth_upcoming_saturday(gap)
+                    projected_date = f"NEXT^{gap}"
 
                 upcoming_milestone = UpcomingMilesone(
                     name=person.name,
@@ -310,6 +289,7 @@ def main():
 
     sorted_upcoming_milestones = sorted(upcoming_milestones, key=lambda x: x.gap)
 
+    print("Name,Milestone,Projected Event,Last Count")
     for um in sorted_upcoming_milestones:
         print(
             f"{um.name}, {um.milestone}, {um.projected_date}, {um.count_on_last_event}"
